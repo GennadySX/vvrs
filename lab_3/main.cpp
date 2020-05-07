@@ -1,359 +1,183 @@
-#include "stdio.h"
-#include <iostream>
-#include <math.h>
-#include <string>
-#include <map>
-#include <random>
+#include <stdio.h>
 #include <omp.h>
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <time.h>
+#include<conio.h>
+#include <stdlib.h>
 using namespace std;
 
-#define m 7
-#define k m*3
+#define DIM 10000
+
+void init(void);
+void delete_(int);
+
+struct prims {
+    int(*edge)[DIM] = new int[DIM][DIM];
+
+    int dim; int U[DIM];
+    int total_minDist;
+    int counts;
+};
+
+struct prims prim;
+struct prims prim2;
 
 
-void Prim1()
-{
+void odin(int rebro) {
+    cout << "===========================================******OdinPotochny*******==================================================" << endl;
 
-	int path[10000] = { 0 }; //В этот массив будут записываться вершины, по которым составиться путь
-	int path_index = 1;
-	int u, v, n, i, j, current = 0;
-	int visited[m], min = 999, mincost = 0;
-	int cost[m][m];
+    int j, k, i;
+    prim.dim = rebro;
+    //переменная, которая содержит текущее максимальное расстояние
 
-	for (int i = 0; i < m; i++)
-	{
-		visited[i] = 0;
-		for (int j = 0; j < m; j++)
-		{
-			cost[i][j] = 0;
-		}
-	}
+    int minDist;
+    int newElem;
+    //переменная, которая содержит следующий узел
 
-	for (int i = 0; i < m; i++)
-	{
-		for (int j = 0; j < m; j++)
-		{
-			if (i == j)
-			{
-				cost[i][j] = 0;
-				continue;
-			}
+    prim.total_minDist = 0;
+    prim.counts = 0;
 
 
-			if (cost[i][j] == 0)
-			{
-				random_device rd; // only used once to initialise (seed) engine
-				mt19937 rng(rd()); // random-number engine used (Mersenne-Twister in this case)
-				uniform_int_distribution<int> uni(0, 15); // guaranteed unbiased
-				cost[i][j] = uni(rng);
-				cost[j][i] = cost[i][j];
-				if (cost[i][j] == 0)
-				{
-					cost[i][j] = 999;
-					cost[j][i] = 999;
-				}
+    srand(time(NULL));
 
-			}
-		}
-	}
+    for (i = 0; i < prim.dim; ++i) {
+        for (j = 0; j < prim.dim; j++) {
+            //std::cin >> (prim.edge[i][j]);
+            prim.edge[i][j] = rand() % (0, 100) + 0;
+        }
+    }
+
+    cout << "Random konets" << endl;
+    //инициализация данных
+    init();
+    double start_time = omp_get_wtime();
+
+    //Рассчитиваем для всех узлов
+    for (k = 0; k < prim.dim - 1; k++)
+    {
+        minDist = 1000;
+        //для каждого узла в минимальном охватывающем дереве
+        for (i = 0; i < prim.counts; i++)
+
+            for (j = 0; j < prim.dim; j++) {
+                //найдем минимальную ширину
+                if (prim.edge[prim.U[i]][j] > minDist || prim.edge[prim.U[i]][j] == 0) {
+                    continue;
+                }
+                else {
+                    minDist = prim.edge[prim.U[i]][j];
+                    newElem = j;
+                }
+            }
+
+        //Складываем локальный minDist на total_minDist
+        prim.total_minDist += minDist;
+        //Присвоем слд элемент узла в U 
+        prim.U[i] = newElem;
+        //Субструктура элементов столбца, в которой новый узло
+        delete_(newElem);
+        //Увеличиваем узлов, которые они находятся в счетчике
+        prim.counts++;
+    }
 
 
-
-	n = m;
-
-	double start_time = omp_get_wtime();
-
-	for (i = 0; i < n; i++)
-		for (j = 0; j < n; j++)
-		{
-			if (cost[i][j] == 0)
-				cost[i][j] = 999;
-		}
-	visited[0] = 1;
-	cout << "\n";
-
-	while (current < n)
-	{
-		int i = current;
-		for (j = 0; j < n; j++)
-		{
-
-			if (cost[i][j] < min)
-			{
-				if (visited[j] == 0)
-				{
-					min = cost[i][j];
-					u = i;
-					v = j;
-				}
-			}
-		}
-
-		if (visited[u] == 0 || visited[v] == 0)
-		{
-			path[path_index] = v;
-			path_index++;
-			current = v;
-			mincost += min;
-			visited[v] = 1;
-		}
-		else
-			current = 999;
-
-		min = 999;
-		cost[u][v] = cost[v][u] = 999;
-	}
-
-	cout << endl << "Алгоритм Прима один поток:" << omp_get_wtime() - start_time;
-
-	//cout << "\n";
-
-	//cout << " —> ";
-	//for (int i = 0;i < n;i++)
-	//{
-	// cout << path[i];
-	// if (i < n - 1) cout << " —> ";
-	//}
-
-	//cout << "\n Минимальная стоимость " << mincost;
-
+    cout << "time: " << omp_get_wtime() - start_time << "\n\n";
 }
 
-void Prim2()
-{
 
-	int path[10000] = { 0 }; //В этот массив будут записываться вершины, по которым составиться путь
-	int path_index = 1;
-	int u, v, n, i, j, current = 0;
-	int visited[m], min = 999, mincost = 0;
-	int cost[m][m];
-
-	for (int i = 0; i < m; i++)
-	{
-		visited[i] = 0;
-		for (int j = 0; j < m; j++)
-		{
-			cost[i][j] = 0;
-		}
-	}
-
-	for (int i = 0; i < m; i++)
-	{
-		for (int j = 0; j < m; j++)
-		{
-			if (i == j)
-			{
-				cost[i][j] = 0;
-				continue;
-			}
+void mnogo(int rebro) {
+    prim2.dim = rebro;
+    prim2.total_minDist = 0;
+    prim2.counts = 0;
 
 
-			if (cost[i][j] == 0)
-			{
-				random_device rd; // only used once to initialise (seed) engine
-				mt19937 rng(rd()); // random-number engine used (Mersenne-Twister in this case)
-				uniform_int_distribution<int> uni(0, 15); // guaranteed unbiased
-				cost[i][j] = uni(rng);
-				cost[j][i] = cost[i][j];
-				if (cost[i][j] == 0)
-				{
-					cost[i][j] = 999;
-					cost[j][i] = 999;
-				}
+    cout << "===========================================******MnogoPotochny*******==================================================" << endl;
 
-			}
-		}
-	}
+    int j, k, i, minDist, newElem;
+    double start_time;
 
+    for (i = 0; i < prim2.dim; ++i) 
+        for (j = 0; j < prim2.dim; j++) {
+            //std::cin >> (prim.edge[i][j]);
+            prim2.edge[i][j] = rand() % (0, 100) + 0;
+        }
 
+    cout << "Random konets" << endl;
 
-	n = m;
+    init();
 
-	double start_time = omp_get_wtime();
+     start_time = omp_get_wtime();
 
+    for (k = 0; k < prim2.dim - 1; k++)
 
+    {
+        minDist = 1000;
+        for (i = 0; i < prim.counts; i++)
 
+#pragma omp parallel num_threads(4)
+#pragma omp for 
+            for (j = 0; j < prim2.dim; j++) {
+                if (prim2.edge[prim2.U[i]][j] > minDist || prim2.edge[prim2.U[i]][j] == 0) {
+                    continue;
+                }
+                else {
+                    minDist = prim2.edge[prim2.U[i]][j];
+                    newElem = j;
+                }
+            }
 
-
-
-	for (i = 0; i < n; i++)
-		for (j = 0; j < n; j++)
-		{
-			if (cost[i][j] == 0)
-				cost[i][j] = 999;
-		}
-	visited[0] = 1;
-	cout << "\n";
-
-	while (current < n)
-	{
-		int i = current;
-		int gmin = 99999;
-#pragma omp parallel num_threads(2)
-		{
-#pragma omp for
-			for (j = 0; j < n; j++)
-			{
-
-				if (cost[i][j] < min)
-				{
-					if (visited[j] == 0)
-					{
-						min = cost[i][j];
-						u = i;
-						v = j;
-					}
-				}
-			}
-
-#pragma omp critical
-			{
-				if (min < gmin)
-					gmin = min;
-			}
-		}
-
-		min = gmin;
-		if (visited[u] == 0 || visited[v] == 0)
-		{
-			path[path_index] = v;
-			path_index++;
-			current = v;
-			mincost += min;
-			visited[v] = 1;
-		}
-		else
-			current = 999;
-
-		min = 999;
-		cost[u][v] = cost[v][u] = 999;
-	}
-
-	cout << endl << "Алгоритм Прима многопоток:" << omp_get_wtime() - start_time;
-
-	/*cout << "\n";
-
-	cout << " —> ";
-	for (int i = 0;i < n;i++)
-	{
-	cout << path[i];
-	if (i < n - 1) cout << " —> ";
-	}
-
-	cout << "\n Минимальная стоимость " << mincost;*/
-
+        prim2.total_minDist += minDist;
+        prim2.U[i] = newElem;
+        delete_(newElem);
+        prim2.counts++;
+    }
+    cout << "time: " << omp_get_wtime() - start_time << "\n\n";
 }
 
-#define V 200
-
-void dijkstra(int graph[V][V], int src)
-{
-	double start_time = omp_get_wtime();
-
-	int dist[V];
-	bool sptSet[V];
-
-	for (int i = 0; i < V; i++)
-		dist[i] = INT_MAX, sptSet[i] = false;
-
-	dist[src] = 0;
-
-	for (int count = 0; count < V - 1; count++)
-	{
-		int min = INT_MAX, min_index;
-
-		for (int v = 0; v < V; v++)
-		{
-
-			if (sptSet[v] == false && dist[v] <= min)
-				min = dist[v], min_index = v;
-		}
-
-		int u = min_index;
-
-		sptSet[u] = true;
-
-		for (int v = 0; v < V; v++)
-		{
-			if (!sptSet[v] && graph[u][v] && dist[u]
-				!= INT_MAX
-				&& dist[u] + graph[u][v] < dist[v])
-				dist[v] = dist[u] + graph[u][v];
-		}
-
-	}
-
-	cout << endl << "Алгоритм дейкстры один поток:" << omp_get_wtime() - start_time;
-
-	//printf(" \n Минмальная дистанция со всех точке до графа 1 \n");
-	//for (int i = 0; i < V; i++)
-	// printf("C %d до 0 = %d\n", i, dist[i]);
-}
-
-void dijkstraM(int graph[V][V], int src)
-{
-	double start_time = omp_get_wtime();
-
-	int dist[V];
-	bool sptSet[V];
-
-	for (int i = 0; i < V; i++)
-		dist[i] = INT_MAX, sptSet[i] = false;
-
-	dist[src] = 0;
-
-	for (int count = 0; count < V - 1; count++)
-	{
-		int min = INT_MAX, min_index;
-		int gmin = 99999;
-		int gindex;
-#pragma omp parallel num_threads(2)
-		{
-#pragma omp for
-			for (int v = 0; v < V; v++)
-			{
-
-				if (sptSet[v] == false && dist[v] <= min)
-					min = dist[v], min_index = v;
-			}
-
-#pragma omp critical
-			{
-				if (min < gmin)
-				{
-					gmin = min;
-					gindex = min_index;
-				}
-
-			}
-		}
-
-		int u = gindex;
-
-		sptSet[u] = true;
-
-		for (int v = 0; v < V; v++)
-		{
-			if (!sptSet[v] && graph[u][v] && dist[u] != INT_MAX
-				&& dist[u] + graph[u][v] < dist[v])
-				dist[v] = dist[u] + graph[u][v];
-		}
-
-	}
-
-	cout << endl << "Алгоритм дейкстры много поток:" << omp_get_wtime() - start_time;
-
-	//printf(" \n Минмальная дистанция со всех точке до графа 1 \n");
-	//for (int i = 0; i < V; i++)
-	// printf("C %d до 0 = %d\n", i, dist[i]);
-}
 
 
 int main() {
-	setlocale(LC_ALL, "Russian");
+    //Установливаем временные рандомизация для уникальные число
+    srand(time(NULL));
 
-	Prim1();
-	Prim2();
+    int rebro; 
+    cout << "Vvedite chislo rebra: ";
+    cin >> rebro;
 
-	return 0;
+    cout << endl;
+
+    mnogo(rebro);
+    odin(rebro);
+
+    return 0;
 }
+
+void init(void) {
+
+    int i, j;
+
+    prim.total_minDist = 0;
+    prim.counts = 0;
+
+    //инициализация U установите
+    for (i = 0; i < prim.dim; i++) prim.U[i] = -1;
+
+    //хранение первого узла в наборе U
+    prim.U[0] = 0;
+    //удаление первого узла
+    delete_(prim.U[0]);
+    //увеличение на единицу числа узлов, находящихся внутри набора U
+    prim.counts++;
+}
+
+void delete_(int next_element)
+{
+    int k;
+    for (k = 0; k < prim.dim; k++) prim.edge[k][next_element] = 0;
+}
+
+
+
+
